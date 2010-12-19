@@ -1,5 +1,5 @@
 ---
-abstract: ' Groonga Runner For Tests'
+abstract: ' Server Runner For Testing Groonga full-text search engine'
 author:
   - 'Okamura. '
 build_requires:
@@ -19,12 +19,11 @@ no_index:
     - t
     - xt
 requires:
-  Class::Accessor::Lite: 0.05
   File::Spec: 0
   File::Temp: 0
-  IO::Socket::INET: 0
-  Time::HiRes: 0
+  File::Which: 0
+  Test::TCP: 0
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/okamuuu/Test-Groonga.git
-version: 0.02
+version: 0.03

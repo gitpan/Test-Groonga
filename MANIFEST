@@ -1,6 +1,6 @@
 .gitignore
 Changes
-inc/LWP/Simple.pm
+inc/LWP/UserAgent.pm
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm
 inc/Module/Install/Base.pm

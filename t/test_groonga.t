@@ -3,49 +3,41 @@ use warnings;
 use Carp ();
 use Test::More;
 use Test::Exception;
+use LWP::UserAgent;
 
 BEGIN { use_ok 'Test::Groonga' }
 
-subtest 'test groonga utility CLASS METHODS.' => sub {
+my $bin = Test::Groonga::_find_groonga_bin();
+plan skip_all => 'groonga binary is not found' unless defined $bin;
 
-    my $path = Test::Groonga->which_groonga_cmd;
-    ok( $path, "I find groonga command: $path" );
+subtest 'get test tcp instance as groonga server in gqtp mode' => sub {
 
-    ok( Test::Groonga->can_groonga_cmd,
-        'And it is executable.' );
-    
-    my $port = Test::Groonga->get_empty_port;
-    ok $port, "get empty port ok: $port";
+    my $server;
+    lives_ok { $server = Test::Groonga->gqtp } "create Test::TCP instance.";
+
+    my $port = $server->port;
+    ok $port, "port: $port";
+   
+    my $json = `$bin -p $port -c 127.0.0.1 status`;     
+    ok $json =~ m/^\[\[0/, "groonga server is running in gqtp mode.";
+
+    $server->stop; 
 };
 
-subtest 'create instance.' => sub {
+subtest 'get test tcp instance as groonga server in http mode' => sub {
 
-    my $groonga = Test::Groonga->new();
-    isa_ok( $groonga, "Test::Groonga" );
+    my $server;
+    lives_ok { $server = Test::Groonga->http } "create Test::TCP instance.";
 
-    ok ! $groonga->port,  "Still not set port.";
-    ok $groonga->temp_db, "This instance has temporary file: @{[$groonga->temp_db]}";
-    
-    ok ! $groonga->is_running;
-    lives_ok { $groonga->start } 'start groonga daemon.';
-    ok $groonga->is_running;
-    lives_ok { $groonga->stop  } 'stop groonga daemon.';
-    ok ! $groonga->is_running;
-};
+    my $port = $server->port;
+    ok $port, "port: $port";
 
-subtest 'create instance as httpd.' => sub {
-
-    my $groonga = Test::Groonga->new(protocol => 'http');
-    isa_ok( $groonga, "Test::Groonga" );
-
-    ok ! $groonga->port,  "Still not set port.";
-    ok $groonga->temp_db, "This instance has temporary file: @{[$groonga->temp_db]}";
-    
-    ok ! $groonga->is_running;
-    lives_ok { $groonga->start } 'start groonga daemon.';
-    ok $groonga->is_running;
-    lives_ok { $groonga->stop  } 'stop groonga daemon.';
-    ok ! $groonga->is_running;
+    my $url = "http://127.0.0.1:$port/d/status";
+    my $res = LWP::UserAgent->new()->get($url);
+    is $res->code, 200, "groonga server is running in http mode";
+    diag "content: " . $res->content;
+ 
+    $server->stop; 
 };
 
 
