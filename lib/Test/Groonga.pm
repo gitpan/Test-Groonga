@@ -6,17 +6,38 @@ use File::Temp ();
 use File::Which ();
 use Test::TCP 1.10;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
+
+sub create {
+    my $class = shift;
+    my %args = @_ == 1 ? %{ $_[0] } : @_;
+
+    my $protocol = delete $args{protocol}
+      or Carp::croak("Missing params 'protocol'");
+ 
+    $protocol =~ m/(?:gqtp|http)/
+      or Carp::croak('protocol must be gqtp or http');
+
+    my $preload = delete $args{preload} || undef;
+    
+    $class->_get_test_tcp( protocol => $protocol, preload => $preload );
+}
 
 sub gqtp {
     my $class  = shift;
     my %args   = @_ == 1 ? %{ $_[0] } : @_;
+    
+    warn 'deprecated..';
+    
     $class->_get_test_tcp( %args, protocol => 'gqtp');
 }
 
 sub http {
     my $class  = shift;
     my %args   = @_ == 1 ? %{ $_[0] } : @_;
+    
+    warn 'deprecated..';
+    
     $class->_get_test_tcp( %args, protocol => 'http');
 }
 
@@ -44,7 +65,7 @@ sub _get_test_tcp {
         code => sub {
             my $port = shift;
 
-            my $result = `$bin -n $db < $preload` if $preload;
+            `$bin -n $db < $preload` if $preload;
             
             # -s : server mode
             # -n : create a new db
@@ -67,19 +88,24 @@ __END__
 
 =head1 NAME
 
-Test::Groonga -  Server Runner For Testing Groonga full-text search engine
+Test::Groonga - Server runner for testing Groonga full-text search engine
 
 =head1 SYNOPSIS
 
     use Test::Groonga;
 
     {
-        my $server = Test::Groonga->gqtp();
+        my $server = Test::Groonga->create(protocol=>'http');
         # testing
     }
 
     {
-        my $server = Test::Groonga->http();
+        my $server = Test::Groonga->create(protocol=>'gqtp');
+        # testing
+    }
+
+    {
+        my $server = Test::Groonga->create(protocol=>'http', preload => 'foo.grn');
         # testing
     }
 
@@ -89,17 +115,21 @@ Test::Groonga provides you temporary groonga server.
 
 =head1 METHODS
 
-=head2 gqtp
+=head2 create
 
 return Test::TCP instance as groonga server.
 
+=head2 gqtp
+
 =head2 http
 
-return Test::TCP instance as groonga server. 
+=head2 _get_test_tcp
+
+=head2 _find_groonga_bin
 
 =head1 AUTHOR
 
-Okamura. 
+Okamura
 
 =head1 LICENSE
 
